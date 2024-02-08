@@ -201,58 +201,51 @@ let encode t (numbers : int list) : string =
                 max_int));
       encode_numbers t ~numbers ()
 
-let decode t id =
+let decode t id0 =
   (* check if id is an empty string, if so, return an empty array *)
-  match id with
-  | "" -> []
-  | id -> (
-    (* check if chars in id are in the alphabet, if not, return the empty array *)
-    match String.for_all (Bytes.contains t.alphabet) id with
-    | false -> []
-    | true ->
-      let alphabet = t.alphabet in
-
-      (* first character is always the `prefix` *)
-      let prefix = String.get id 0 in
-
+  (* check if chars in id are in the alphabet, if not, return the empty array *)
+  if String.equal id0 "" || not (String.for_all (Bytes.contains t.alphabet) id0)
+  then []
+  else
+    (* re-arrange alphabet back into it's original form *)
+    let alphabet0 =
       (* `offset` is the semi-random position that was generated during encoding *)
-      let offset = Bytes.index alphabet prefix in
-
-      (* re-arrange alphabet back into it's original form *)
-      let alphabet = Sqids_utils.bytes_rotate alphabet offset in
-
-      (* reverse alphabet *)
-      Sqids_utils.bytes_rev_inplace alphabet;
-
-      (* now it's safe to remove the prefix character from ID, it's not needed anymore *)
-      let id = String.sub id 1 (String.length id - 1) in
-
-      let rec process_id id' numbers =
-        match String.length id' with
-        (* stop when `id` length is 0 and return numbers *)
-        | 0 -> numbers
-        | _ -> (
-          let separator = Bytes.get alphabet 0 in
-          (* we need the first part to the left of the separator to decode the number *)
-          let chunks = String.split_on_char separator id' in
-          match chunks with
-          | [] -> numbers
-          (* only run this if `chunks` length is not 0 *)
-          | hd :: tl ->
-            (* if chunk[0] is empty, we are done (the rest are junk characters) *)
-            if hd = "" then numbers
-            else
-              (* decode the number without using the `separator` character *)
-              let alphabet_without_separator = Bytes.sub alphabet 1 (Bytes.length alphabet - 1) in
-              let decoded_number = to_number hd (alphabet_without_separator |> String.of_bytes) in
-              let numbers' = List.append numbers [ decoded_number ] in
-              (* if this ID has multiple numbers, shuffle the alphabet because that's what encoding function did *)
-              if List.length chunks > 1 then (
-                Sqids_utils.bytes_shuffle_inplace alphabet;
-                process_id (String.concat (Char.escaped separator) tl) numbers'
-              )
-              else numbers'
-        )
+      let offset =
+        (* first character is always the `prefix` *)
+        let prefix = String.get id0 0 in
+        Bytes.index t.alphabet prefix
       in
-      process_id id []
-  )
+      Sqids_utils.bytes_rotate t.alphabet offset
+    in
+    Sqids_utils.bytes_rev_inplace alphabet0;
+
+    (* now it's safe to remove the prefix character from ID, it's not needed anymore *)
+    let id1 = String.sub id0 1 (String.length id0 - 1) in
+
+    let rec loop id alphabet acc =
+      (* stop when `id` length is 0 and return numbers *)
+      if String.equal id "" then List.rev acc
+      else
+        let sep = Bytes.get alphabet 0 in
+        (* we need the first part to the left of the separator to decode the number *)
+        match String.split_on_char sep id with
+        (* only run this if `chunks` length is not 0 *)
+        | [] -> List.rev acc
+        (* if chunk[0] is empty, we are done (the rest are junk characters) *)
+        | "" :: _chunks -> List.rev acc
+        | chunks_hd :: chunks_tl ->
+            let acc' =
+              (* decode the number without using the `separator` character *)
+              let alphabet_without_sep =
+                Bytes.sub alphabet 1 (Bytes.length alphabet - 1)
+              in
+              let n = to_number chunks_hd alphabet_without_sep in
+              n :: acc
+            in
+            (* if this ID has multiple numbers, shuffle the alphabet because that's what encoding function did *)
+            if not (List.is_empty chunks_tl) then
+              Sqids_utils.bytes_shuffle_inplace alphabet;
+            let id' = String.concat (String.make 1 sep) chunks_tl in
+            loop id' alphabet acc'
+    in
+    loop id1 alphabet0 []
