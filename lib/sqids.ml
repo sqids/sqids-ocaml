@@ -9,7 +9,9 @@ module String_set = Sqids_utils.String_set
 type t = { alphabet : Bytes.t; min_length : int; blocklist : String_set.t }
 
 module Defaults = struct
-  let alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let alphabet =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
   let min_length = 0
   let blocklist = Blocklist.blocklist
 end
@@ -46,24 +48,27 @@ let is_blocked_id t ~id =
         let word_len = String.length word in
         if word_len <= id_len then
           if id_len <= 3 || word_len <= 3 then (
-            if String.equal id word then raise_notrace Blocked_word
-          )
+            if String.equal id word then raise_notrace Blocked_word)
           else if String.for_all Sqids_utils.char_is_digit id then (
-            if String.starts_with ~prefix:word id || String.ends_with ~suffix:word id then
-              raise_notrace Blocked_word
-          )
-          else if Sqids_utils.string_is_infix ~affix:word id then raise_notrace Blocked_word
-      )
+            if
+              String.starts_with ~prefix:word id
+              || String.ends_with ~suffix:word id
+            then raise_notrace Blocked_word)
+          else if Sqids_utils.string_is_infix ~affix:word id then
+            raise_notrace Blocked_word)
       t.blocklist;
     false
   with Blocked_word -> true
 
 let make ?(alphabet = Defaults.alphabet) ?(min_length = Defaults.min_length)
     ?(blocklist = Defaults.blocklist) () =
-  if String.length alphabet < 3 then raise (Alphabet_too_short "Alphabet length must be at least 3");
+  if String.length alphabet < 3 then
+    raise (Alphabet_too_short "Alphabet length must be at least 3");
 
   if Sqids_utils.string_has_dups alphabet then
-    raise (Alphabet_contains_repeated_characters "Alphabet must contain unique characters");
+    raise
+      (Alphabet_contains_repeated_characters
+         "Alphabet must contain unique characters");
 
   (* min_length should be equivalent to uint8_t (0-255) *)
   (* https://github.com/sqids/sqids-spec/blob/40f407169fa0f555b93a197ff0a9e974efa9fba6/src/index.ts#L44 *)
@@ -71,15 +76,15 @@ let make ?(alphabet = Defaults.alphabet) ?(min_length = Defaults.min_length)
   if min_length < 0 || min_length > min_length_limit then
     raise
       (Minimum_length_outside_limits
-         (Printf.sprintf "Minimum length has to be between 0 and %d" min_length_limit)
-      );
+         (Printf.sprintf "Minimum length has to be between 0 and %d"
+            min_length_limit));
 
   String.to_seq alphabet
   |> Seq.iter (fun char ->
          if Char.code char > 127 then
            raise
-             (Alphabet_contains_multibyte_characters "Alphabet cannot contain multibyte characters")
-     );
+             (Alphabet_contains_multibyte_characters
+                "Alphabet cannot contain multibyte characters"));
 
   (* Convert blocklist to String_set *)
   let blocklist_set = List.to_seq blocklist |> String_set.of_seq in
@@ -92,10 +97,11 @@ let make ?(alphabet = Defaults.alphabet) ?(min_length = Defaults.min_length)
         let word = String.lowercase_ascii word in
         (* Drop word if characters in word are not in the alphabet, and
            words with less than 3 chars should be dropped *)
-        if String.length word >= 3 && String.for_all (String.contains alphabet_lower) word then
-          Some word
-        else None
-      )
+        if
+          String.length word >= 3
+          && String.for_all (String.contains alphabet_lower) word
+        then Some word
+        else None)
       blocklist_set
   in
 
@@ -123,8 +129,7 @@ let rec encode_numbers t ~numbers ?(increment = 0) () =
         let alphabet_idx = v mod alphabet_len in
         (* Add the index 'i' and the accumulated value 'a' *)
         let alphabet_v = Bytes.get_uint8 alphabet alphabet_idx in
-        alphabet_v + idx + a
-      )
+        alphabet_v + idx + a)
       (* Start with the size of the numbers list' *)
       numbers_len
       (* Enumerate over the elements of 'numbers' along with their indices *)
@@ -161,9 +166,7 @@ let rec encode_numbers t ~numbers ?(increment = 0) () =
         Buffer.add_bytes id_buf (Bytes.sub alphabet 0 1);
 
         (* shuffle on every iteration *)
-        Sqids_utils.bytes_shuffle_inplace alphabet
-      )
-    )
+        Sqids_utils.bytes_shuffle_inplace alphabet))
     numbers;
 
   (* handle `minLength` requirement, if the ID is too short *)
@@ -176,10 +179,11 @@ let rec encode_numbers t ~numbers ?(increment = 0) () =
        the rest are junk characters *)
     while t.min_length - Buffer.length id_buf > 0 do
       Sqids_utils.bytes_shuffle_inplace alphabet;
-      let slice_len = min (t.min_length - Buffer.length id_buf) (Bytes.length alphabet) in
+      let slice_len =
+        min (t.min_length - Buffer.length id_buf) (Bytes.length alphabet)
+      in
       Buffer.add_subbytes id_buf alphabet 0 slice_len
-    done
-  );
+    done);
 
   let id = Buffer.contents id_buf in
 
