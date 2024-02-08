@@ -30,15 +30,11 @@ let to_id num alphabet =
   loop num Bytes.empty
 
 let to_number id alphabet =
-  let id_len = String.length id in
-  let alphabet_len = String.length alphabet in
-  let num = ref 0 in
-  (* sum all the values of the list *)
-  for c = 0 to id_len - 1 do
-    let idx = String.index alphabet (String.get id c) in
-    num := (!num * alphabet_len) + idx
-  done;
-  !num
+  String.fold_left
+    (fun acc c ->
+      let i = Bytes.index alphabet c in
+      (acc * Bytes.length alphabet) + i)
+    0 id
 
 let is_blocked_id t ~id =
   let id = String.lowercase_ascii id in
