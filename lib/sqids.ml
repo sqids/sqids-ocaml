@@ -4,7 +4,7 @@ exception Alphabet_contains_repeated_characters of string
 exception Minimum_length_outside_limits of string
 exception Encode_max_attempts of string
 
-module String_set = Sqids_utils.String_set
+module String_set = Utils.String_set
 
 type t = { alphabet : Bytes.t; min_length : int; blocklist : String_set.t }
 
@@ -49,12 +49,12 @@ let is_blocked_id t ~id =
         if word_len <= id_len then
           if id_len <= 3 || word_len <= 3 then (
             if String.equal id word then raise_notrace Blocked_word)
-          else if String.for_all Sqids_utils.char_is_digit id then (
+          else if String.for_all Utils.char_is_digit id then (
             if
               String.starts_with ~prefix:word id
               || String.ends_with ~suffix:word id
             then raise_notrace Blocked_word)
-          else if Sqids_utils.string_is_infix ~affix:word id then
+          else if Utils.string_is_infix ~affix:word id then
             raise_notrace Blocked_word)
       t.blocklist;
     false
@@ -65,7 +65,7 @@ let make ?(alphabet = Defaults.alphabet) ?(min_length = Defaults.min_length)
   if String.length alphabet < 3 then
     raise (Alphabet_too_short "Alphabet length must be at least 3");
 
-  if Sqids_utils.string_has_dups alphabet then
+  if Utils.string_has_dups alphabet then
     raise
       (Alphabet_contains_repeated_characters
          "Alphabet must contain unique characters");
@@ -106,7 +106,7 @@ let make ?(alphabet = Defaults.alphabet) ?(min_length = Defaults.min_length)
   in
 
   let alphabet = Bytes.of_string alphabet in
-  Sqids_utils.bytes_shuffle_inplace alphabet;
+  Utils.bytes_shuffle_inplace alphabet;
 
   { alphabet; min_length; blocklist = filtered_blocklist }
 
@@ -140,13 +140,13 @@ let rec encode_numbers t ~numbers ?(increment = 0) () =
   let offset = (offset + increment) mod alphabet_len in
 
   (* re-arrange alphabet so that second-half goes in front of the first-half *)
-  let alphabet = Sqids_utils.bytes_rotate alphabet offset in
+  let alphabet = Utils.bytes_rotate alphabet offset in
 
   (* `prefix` is the first character in the generated ID, used for randomization *)
   let prefix = Bytes.get alphabet 0 in
 
   (* reverse alphabet (otherwise for [0, x] `offset` and `separator` will be the same char) *)
-  Sqids_utils.bytes_rev_inplace alphabet;
+  Utils.bytes_rev_inplace alphabet;
 
   (* final ID will always have the `prefix` character at the beginning *)
   (* create buffer for the resulting id with an arbitrary initial size of 4 bytes *)
@@ -166,7 +166,7 @@ let rec encode_numbers t ~numbers ?(increment = 0) () =
         Buffer.add_bytes id_buf (Bytes.sub alphabet 0 1);
 
         (* shuffle on every iteration *)
-        Sqids_utils.bytes_shuffle_inplace alphabet))
+        Utils.bytes_shuffle_inplace alphabet))
     numbers;
 
   (* handle `minLength` requirement, if the ID is too short *)
@@ -178,7 +178,7 @@ let rec encode_numbers t ~numbers ?(increment = 0) () =
        for decoding: two separators next to each other is what tells us
        the rest are junk characters *)
     while t.min_length - Buffer.length id_buf > 0 do
-      Sqids_utils.bytes_shuffle_inplace alphabet;
+      Utils.bytes_shuffle_inplace alphabet;
       let slice_len =
         min (t.min_length - Buffer.length id_buf) (Bytes.length alphabet)
       in
@@ -219,9 +219,9 @@ let decode t id0 =
         let prefix = String.get id0 0 in
         Bytes.index t.alphabet prefix
       in
-      Sqids_utils.bytes_rotate t.alphabet offset
+      Utils.bytes_rotate t.alphabet offset
     in
-    Sqids_utils.bytes_rev_inplace alphabet0;
+    Utils.bytes_rev_inplace alphabet0;
 
     (* now it's safe to remove the prefix character from ID, it's not needed anymore *)
     let id1 = String.sub id0 1 (String.length id0 - 1) in
@@ -248,7 +248,7 @@ let decode t id0 =
             in
             (* if this ID has multiple numbers, shuffle the alphabet because that's what encoding function did *)
             if not (List.is_empty chunks_tl) then
-              Sqids_utils.bytes_shuffle_inplace alphabet;
+              Utils.bytes_shuffle_inplace alphabet;
             let id' = String.concat (String.make 1 sep) chunks_tl in
             loop id' alphabet acc'
     in
