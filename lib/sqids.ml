@@ -247,7 +247,7 @@ let decode t id0 =
               n :: acc
             in
             (* if this ID has multiple numbers, shuffle the alphabet because that's what encoding function did *)
-            if not (List.is_empty chunks_tl) then
+            if not (Utils.list_is_empty chunks_tl) then
               Utils.bytes_shuffle_inplace alphabet;
             let id' = String.concat (String.make 1 sep) chunks_tl in
             loop id' alphabet acc'
