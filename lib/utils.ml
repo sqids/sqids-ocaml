@@ -65,3 +65,4 @@ let string_is_infix ~affix s =
     in
     loop 0 0
 
+let list_is_empty = function [] -> true | _ -> false
