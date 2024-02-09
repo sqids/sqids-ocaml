@@ -1,0 +1,45 @@
+(test
+  (name Test_encoding)
+  (modules Test_encoding)
+  (libraries sqids))
+
+(rule
+  (alias runtest)
+  (deps ./Test_encoding.input)
+  (action
+    (with-stdin-from ./Test_encoding.input
+      (with-stdout-to Test_encoding.actual
+        (run ./Test_encoding.exe)))))
+
+(rule
+  (alias runtest)
+  (action (diff Test_encoding.input Test_encoding.actual)))
+
+(rule
+  (alias runtest)
+  (deps ./Test_encoding_0_99999.input)
+  (action
+    (with-stdin-from ./Test_encoding_0_99999.input
+      (with-stdout-to Test_encoding_0_99999.actual
+        (run ./Test_encoding.exe)))))
+
+(rule
+ (alias runtest)
+ (action (diff Test_encoding_0_99999.input Test_encoding_0_99999.actual)))
+
+(rule
+  (alias runtest)
+  (deps ./Test_encoding_blocklist.input)
+  (action
+    (with-stdin-from ./Test_encoding_blocklist.input
+      (with-stdout-to Test_encoding_blocklist.actual
+        (run ./Test_encoding.exe)))))
+
+(rule
+  (alias runtest)
+  (action (diff Test_encoding_blocklist.input Test_encoding_blocklist.actual)))
+
+(test
+  (name Test_encoding_gen)
+  (modules Test_encoding_gen)
+  (libraries sqids qcheck-core))

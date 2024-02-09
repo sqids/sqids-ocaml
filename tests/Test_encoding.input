@@ -1,0 +1,76 @@
+# simple declarative test input for sqids
+# each line is either:
+# - n1,n2,...,n;sqids_id
+# - n1,n2,...,n;sqids_id;exception
+
+# empty
+;
+
+-1;;Invalid_argument("Encoding supports numbers between 0 and 4611686018427387903")
+
+1,2,3;86Rf07
+
+# many numbers
+0,0,0,1,2,3,100,1000,100000,1000000;VbXZm2U2yxetdiy9LdkcJKNRBg7
+
+# ocaml max_int
+4611686018427387903;EGqHPBv9w2Vf
+
+# small numbers
+0;bM
+1;Uk
+2;gb
+3;Ef
+4;Vq
+5;uw
+6;OI
+7;AX
+8;p6
+9;nJ
+
+# multiple small numbers
+0,0;SvIz
+0,1;n3qa
+0,2;tryF
+0,3;eg6q
+0,4;rSCF
+0,5;sR8x
+0,6;uY2M
+0,7;74dI
+0,8;30WX
+0,9;moxr
+0,0;SvIz
+1,0;nWqP
+2,0;tSyw
+3,0;eX68
+4,0;rxCY
+5,0;sV8a
+6,0;uf2K
+7,0;7Cdk
+8,0;3aWP
+9,0;m2xn
+1,0;nWqP
+2,0;tSyw
+3,0;eX68
+4,0;rxCY
+5,0;sV8a
+6,0;uf2K
+7,0;7Cdk
+8,0;3aWP
+9,0;m2xn
+
+10;98
+11;xh
+12;vE
+13;2K
+14;HO
+15;ed
+16;s1
+17;GZ
+18;RO
+19;L3
+20;PQ
+
+# qcheck generated
+63;UkK
+11694146092834141;Ukppppppppp
