@@ -1,0 +1,4 @@
+(executable
+ (public_name sqids-ocaml)
+ (name main)
+ (libraries sqids))
