@@ -1,5 +1,8 @@
 type case = { ns : int list; id : string }
 
+let in_channel_input_line ic =
+  match Stdlib.input_line ic with s -> Some s | exception End_of_file -> None
+
 let parse line =
   if String.length line = 0 then None
   else if String.get line 0 = '#' then None
@@ -42,7 +45,7 @@ let test sqids case =
   with exn -> print ~exn case
 
 let rec repl sqids =
-  match In_channel.input_line stdin with
+  match in_channel_input_line stdin with
   | Some line ->
       let () =
         match parse line with
