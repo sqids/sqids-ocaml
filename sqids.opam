@@ -9,11 +9,11 @@ homepage: "https://github.com/sqids/sqids-ocaml"
 doc: "https://sqids.org/ocaml"
 bug-reports: "https://github.com/sqids/sqids-ocaml/issues"
 depends: [
-  "ocaml"
+  "ocaml" {>= "4.11.0"}
   "dune" {>= "3.13"}
-  "qcheck-core" {with-test}
+  "qcheck-core" {with-test & >= "0.21.3"}
   "ocaml-lsp-server" {with-dev-setup}
-  "ocamlformat" {with-dev-setup}
+  "ocamlformat" {with-dev-setup & >= "0.26.1"}
   "odoc" {with-doc}
 ]
 build: [
