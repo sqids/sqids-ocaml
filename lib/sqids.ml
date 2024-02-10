@@ -200,9 +200,7 @@ let encode t (numbers : int list) : string =
   | numbers ->
       if List.exists (fun nr -> nr < 0) numbers then
         raise
-          (Invalid_argument
-             (Printf.sprintf "Encoding supports numbers between 0 and %d"
-                max_int));
+          (Invalid_argument "Encoding supports numbers between 0 and max_int.");
       encode_numbers t ~numbers ()
 
 let decode t id0 =
