@@ -27,6 +27,27 @@ let bytes_for_all p s =
 
 let string_for_all f s = bytes_for_all f (ext_bytes_of_string s)
 
+let string_starts_with ~prefix s =
+  let len_s = ext_string_length s and len_pre = ext_string_length prefix in
+  let rec aux i =
+    if i = len_pre then true
+    else if ext_string_unsafe_get s i <> ext_string_unsafe_get prefix i then
+      false
+    else aux (i + 1)
+  in
+  len_s >= len_pre && aux 0
+
+let string_ends_with ~suffix s =
+  let len_s = ext_string_length s and len_suf = ext_string_length suffix in
+  let diff = len_s - len_suf in
+  let rec aux i =
+    if i = len_suf then true
+    else if ext_string_unsafe_get s (diff + i) <> ext_string_unsafe_get suffix i
+    then false
+    else aux (i + 1)
+  in
+  diff >= 0 && aux 0
+
 let bytes_swap_inplace bytes i j =
   let tmp = Stdlib.Bytes.get bytes i in
   Stdlib.Bytes.set bytes i (Stdlib.Bytes.get bytes j);
