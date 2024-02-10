@@ -1,6 +1,8 @@
 module String_set = Set.Make (String)
 module Char_set = Set.Make (Char)
 
+external ext_string_length : string -> int = "%string_length"
+external ext_string_unsafe_get : string -> int -> char = "%string_unsafe_get"
 external ext_bytes_length : bytes -> int = "%bytes_length"
 external ext_bytes_unsafe_get : bytes -> int -> char = "%bytes_unsafe_get"
 external ext_bytes_of_string : string -> bytes = "%bytes_of_string"
@@ -13,6 +15,17 @@ let bytes_fold_left f x a =
   !r
 
 let string_fold_left f a x = bytes_fold_left f a (ext_bytes_of_string x)
+
+let bytes_for_all p s =
+  let n = ext_bytes_length s in
+  let rec loop i =
+    if i = n then true
+    else if p (ext_bytes_unsafe_get s i) then loop (succ i)
+    else false
+  in
+  loop 0
+
+let string_for_all f s = bytes_for_all f (ext_bytes_of_string s)
 
 let bytes_swap_inplace bytes i j =
   let tmp = Stdlib.Bytes.get bytes i in
@@ -58,9 +71,6 @@ let string_has_dups str =
   Stdlib.String.length str <> Char_set.cardinal set
 
 (* Partially adapted from https://github.com/dbuenzli/astring by dbuenzli licensed under ISC. *)
-external ext_string_length : string -> int = "%string_length"
-external ext_string_unsafe_get : string -> int -> char = "%string_unsafe_get"
-
 let string_is_infix ~affix s =
   let len_a = ext_string_length affix in
   let len_s = ext_string_length s in
