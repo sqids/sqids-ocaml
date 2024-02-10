@@ -20,8 +20,15 @@
  (synopsis "OCaml port of Sqids")
  (description "Generate short unique IDs from numbers.")
  (depends
-   ocaml
-   dune
-   (qcheck-core :with-test)
-   (ocaml-lsp-server :with-dev-setup)
-   (ocamlformat :with-dev-setup)))
+  (ocaml
+   (>= 4.11.0))
+  dune
+  (qcheck-core
+   (and
+    :with-test
+    (>= 0.21.3)))
+  (ocaml-lsp-server :with-dev-setup)
+  (ocamlformat
+   (and
+    :with-dev-setup
+    (>= 0.26.1)))))
