@@ -6,12 +6,16 @@ let parse line =
   else
     match String.split_on_char ';' line with
     | [ ""; id ] -> Some { ns = []; id }
-    | [ ns; id ] ->
-      let ns = List.map int_of_string (String.split_on_char ',' ns) in
-      Some { ns; id }
-    | [ ns; id; _err ] ->
-      let ns = List.map int_of_string (String.split_on_char ',' ns) in
-      Some { ns; id }
+    | [ ns; id ] -> (
+        try
+          let ns = List.map int_of_string (String.split_on_char ',' ns) in
+          Some { ns; id }
+        with Failure _ -> None)
+    | [ ns; id; _err ] -> (
+        try
+          let ns = List.map int_of_string (String.split_on_char ',' ns) in
+          Some { ns; id }
+        with Failure _ -> None)
     | _ -> invalid_arg line
 
 let print ?exn { ns; id } =
