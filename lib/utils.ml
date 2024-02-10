@@ -1,6 +1,19 @@
 module String_set = Set.Make (String)
 module Char_set = Set.Make (Char)
 
+external ext_bytes_length : bytes -> int = "%bytes_length"
+external ext_bytes_unsafe_get : bytes -> int -> char = "%bytes_unsafe_get"
+external ext_bytes_of_string : string -> bytes = "%bytes_of_string"
+
+let bytes_fold_left f x a =
+  let r = ref x in
+  for i = 0 to ext_bytes_length a - 1 do
+    r := f !r (ext_bytes_unsafe_get a i)
+  done;
+  !r
+
+let string_fold_left f a x = bytes_fold_left f a (ext_bytes_of_string x)
+
 let bytes_swap_inplace bytes i j =
   let tmp = Stdlib.Bytes.get bytes i in
   Stdlib.Bytes.set bytes i (Stdlib.Bytes.get bytes j);
@@ -20,7 +33,8 @@ let bytes_shuffle_inplace bytes =
   for i = 0 to bytes_len - 1 - 1 do
     let j = bytes_len - 1 - i in
     let r =
-      ((i * j) + Stdlib.Bytes.get_uint8 bytes i + Stdlib.Bytes.get_uint8 bytes j) mod bytes_len
+      ((i * j) + Stdlib.Bytes.get_uint8 bytes i + Stdlib.Bytes.get_uint8 bytes j)
+      mod bytes_len
     in
     bytes_swap_inplace bytes i r
   done
@@ -34,23 +48,22 @@ let bytes_rotate bytes offset =
   done;
   rotated_bytes
 
-let char_is_digit c =
-  match c with
-  | '0' .. '9' -> true
-  | _ -> false
+let char_is_digit c = match c with '0' .. '9' -> true | _ -> false
 
 let string_has_dups str =
   let module Char_set = Set.Make (Char) in
-  let set = Stdlib.String.fold_left (fun set c -> Char_set.add c set) Char_set.empty str in
+  let set =
+    string_fold_left (fun set c -> Char_set.add c set) Char_set.empty str
+  in
   Stdlib.String.length str <> Char_set.cardinal set
 
 (* Partially adapted from https://github.com/dbuenzli/astring by dbuenzli licensed under ISC. *)
-external length : string -> int = "%string_length"
-external unsafe_get : string -> int -> char = "%string_unsafe_get"
+external ext_string_length : string -> int = "%string_length"
+external ext_string_unsafe_get : string -> int -> char = "%string_unsafe_get"
 
 let string_is_infix ~affix s =
-  let len_a = length affix in
-  let len_s = length s in
+  let len_a = ext_string_length affix in
+  let len_s = ext_string_length s in
   if len_a > len_s then false
   else
     let max_idx_a = len_a - 1 in
@@ -59,8 +72,11 @@ let string_is_infix ~affix s =
       if i > max_idx_s then false
       else if k > max_idx_a then true
       else if k > 0 then
-        if unsafe_get affix k = unsafe_get s (i + k) then loop i (k + 1) else loop (i + 1) 0
-      else if unsafe_get affix 0 = unsafe_get s i then loop i 1
+        if ext_string_unsafe_get affix k = ext_string_unsafe_get s (i + k) then
+          loop i (k + 1)
+        else loop (i + 1) 0
+      else if ext_string_unsafe_get affix 0 = ext_string_unsafe_get s i then
+        loop i 1
       else loop (i + 1) 0
     in
     loop 0 0
