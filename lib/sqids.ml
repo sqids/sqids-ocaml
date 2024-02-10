@@ -32,7 +32,7 @@ let to_id num alphabet =
   loop num Bytes.empty
 
 let to_number id alphabet =
-  String.fold_left
+  Utils.string_fold_left
     (fun acc c ->
       let i = Bytes.index alphabet c in
       (acc * Bytes.length alphabet) + i)
@@ -49,10 +49,10 @@ let is_blocked_id t ~id =
         if word_len <= id_len then
           if id_len <= 3 || word_len <= 3 then (
             if String.equal id word then raise_notrace Blocked_word)
-          else if String.for_all Utils.char_is_digit id then (
+          else if Utils.string_for_all Utils.char_is_digit id then (
             if
-              String.starts_with ~prefix:word id
-              || String.ends_with ~suffix:word id
+              Utils.string_starts_with ~prefix:word id
+              || Utils.string_ends_with ~suffix:word id
             then raise_notrace Blocked_word)
           else if Utils.string_is_infix ~affix:word id then
             raise_notrace Blocked_word)
@@ -99,7 +99,7 @@ let make ?(alphabet = Defaults.alphabet) ?(min_length = Defaults.min_length)
            words with less than 3 chars should be dropped *)
         if
           String.length word >= 3
-          && String.for_all (String.contains alphabet_lower) word
+          && Utils.string_for_all (String.contains alphabet_lower) word
         then Some word
         else None)
       blocklist_set
@@ -206,7 +206,9 @@ let encode t (numbers : int list) : string =
 let decode t id0 =
   (* check if id is an empty string, if so, return an empty array *)
   (* check if chars in id are in the alphabet, if not, return the empty array *)
-  if String.equal id0 "" || not (String.for_all (Bytes.contains t.alphabet) id0)
+  if
+    String.equal id0 ""
+    || not (Utils.string_for_all (Bytes.contains t.alphabet) id0)
   then []
   else
     (* re-arrange alphabet back into it's original form *)
